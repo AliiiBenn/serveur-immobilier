@@ -13,6 +13,7 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
 async def root(request: Request):
+    """La page d'accueil est la page où se trouvent la liste d'immeubles et appartements"""
     return templates.TemplateResponse(
         request=request,
         name="index.html"
