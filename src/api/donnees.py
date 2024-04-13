@@ -1,4 +1,10 @@
 from dataclasses import dataclass
+from enum import Enum, auto
+
+
+class StatutPersonne(Enum):
+    LOCATAIRE = auto()
+    PROPRIETAIRE = auto()
 
 
 @dataclass
@@ -6,6 +12,7 @@ class Personne:
     nom: str
     prenom: str
     telephone: str
+    statut: StatutPersonne
 
 
 @dataclass
