@@ -1,3 +1,4 @@
+import typing
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,3 +27,4 @@ async def login(request: Request):
         request=request,
         name="login.html"
     )
+
