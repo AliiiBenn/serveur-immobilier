@@ -1,7 +1,8 @@
 from typing import Self
-from sqlmodel import Field, SQLModel, Session, create_engine
+import warnings
+from sqlmodel import Field, SQLModel, Session, create_engine, Relationship
 
-from api.engine import Engine
+from engine import Engine
 
 
 
@@ -10,29 +11,36 @@ class Immeuble(SQLModel, table=True):
     nom : str 
     adresse : str 
     syndicat : int 
-    # TODO: Ajouter la liste d'appartements
+    
+    appartements : list["Appartement"] = Relationship(back_populates="immeuble")
     
     
+
+class Appartement(SQLModel, table=True):
+    identifiant : int = Field(primary_key=True)
+    
+    etage : int = Field(default=0)
+    numero : int = Field(default=0)
+    superficie : int
+    
+    immeuble : "Immeuble" = Relationship(back_populates="appartements")
+    
+    # TODO: Liste de personnes liées à l'appartement
+    
     
 
-# engine = create_engine(
-#     "sqlite:///database/main.db",
-#     echo=True
-# )
 
 
-# SQLModel.metadata.create_all(engine) 
 
-# with Session(engine) as session:
-#     session.add(
-#         Immeuble(
-#             identifiant=1,
-#             nom="Test",
-#             adresse="He",
-#             syndicat=2
-#         )
-#     )
+
+if __name__ == '__main__':
+    warnings.warn("This is a module, not a script. It is not meant to be run directly.")
     
-#     session.commit()
-
+    engine = Engine()
+    
+    SQLModel.metadata.create_all(engine.engine)
+    
+    appa = Appartement(identifiant=1)
+    
+    
 
