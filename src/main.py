@@ -3,9 +3,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlmodel import Session
 
-from api import Engine 
-from api.immeubles import ImmeubleCRUD
+from api.engine import Engine 
+from api.models import Immeuble
+from api.crud import ImmeubleCRUD, CRUD
 
 
 # app = FastAPI()
@@ -32,9 +34,15 @@ from api.immeubles import ImmeubleCRUD
 #     )
 
 
+    
+
+
 if __name__ == "__main__":
     
     engine = Engine()
+    engine.create_all()
+    
     crud = ImmeubleCRUD(engine)
     
-    crud.create_without_id("Immeuble", "Adresse", 1)
+    crud.create(Immeuble(nom="Test", adresse="test", syndicat=1))
+    

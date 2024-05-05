@@ -1,22 +1,18 @@
-from typing import Final, Literal, Optional, Self, TYPE_CHECKING
+from typing import Optional
 import warnings
-from sqlmodel import Field, SQLModel, Session, create_engine, Relationship
-
-TESTING : Final[bool] = False
+from sqlmodel import Field, SQLModel, Relationship
 
 
-from api.engine import Engine
 
-if TYPE_CHECKING:
-    from api.immeubles.immeuble import Immeuble
 
-# class Immeuble(SQLModel, table=True):
-#     identifiant : int = Field(primary_key=True) 
-#     nom : str 
-#     adresse : str 
-#     syndicat : int 
+
+class Immeuble(SQLModel, table=True):
+    identifiant : int = Field(primary_key=True) 
+    nom : str 
+    adresse : str 
+    syndicat : int 
     
-#     appartements : list["Appartement"] = Relationship(back_populates="immeuble")
+    appartements : list["Appartement"] = Relationship(back_populates="immeuble")
     
     
 
@@ -57,35 +53,4 @@ class Syndicat(SQLModel, table=True):
     referente : int | None = Field(default=None, foreign_key="personne.identifiant")
 
 
-
-if __name__ == '__main__':
-    warnings.warn("This is a module, not a script. It is not meant to be run directly.")
-    
-    engine = Engine()
-    
-    SQLModel.metadata.create_all(engine.engine)
-    
-    # with Session(engine.engine) as session:
-    #     immeuble = Immeuble(
-    #         identifiant=2,
-    #         nom="Immeuble",
-    #         adresse="Adresse",
-    #         syndicat=1
-    #     )
-        
-    #     appartement = Appartement(identifiant=1, superficie=134, immeuble=immeuble)
-    #     appartement2 = Appartement(identifiant=2, superficie=134, immeuble=immeuble)
-        
-        
-    #     appartement.immeuble = immeuble
-    #     appartement2.immeuble = immeuble
-        
-    #     session.add(appartement)
-    #     session.add(appartement2)
-        
-    #     print(immeuble.appartements)
-        
-    #     session.commit()
-    
-    
 

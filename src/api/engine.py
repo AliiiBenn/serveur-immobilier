@@ -1,6 +1,6 @@
 from typing import ClassVar, Optional
 
-from sqlmodel import create_engine
+from sqlmodel import SQLModel, create_engine
 import sqlalchemy
 
 import warnings
@@ -26,6 +26,10 @@ class Engine:
     @property
     def engine(self) -> sqlalchemy.Engine:
         return self.__engine
+    
+    
+    def create_all(self):
+        SQLModel.metadata.create_all(self.engine)
     
     
     
