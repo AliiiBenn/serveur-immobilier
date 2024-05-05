@@ -8,6 +8,7 @@ import warnings
 
 class Engine:
     PATH : ClassVar[str] = "sqlite:///database/main.db"
+    ECHO : ClassVar[bool] = False
     
     
     _instance : Optional["Engine"] = None
@@ -19,7 +20,7 @@ class Engine:
     
     
     def __init__(self):
-        self.__engine = create_engine(self.PATH, echo=True)
+        self.__engine = create_engine(Engine.PATH, echo=Engine.ECHO)
         
         
     @property

@@ -1,23 +1,22 @@
-from typing import Final, Literal, Optional, Self
+from typing import Final, Literal, Optional, Self, TYPE_CHECKING
 import warnings
 from sqlmodel import Field, SQLModel, Session, create_engine, Relationship
 
-TESTING : Final[bool] = True
+TESTING : Final[bool] = False
 
 
-if TESTING:
-    from engine import Engine
-else:
-    from api.engine import Engine 
+from api.engine import Engine
 
+if TYPE_CHECKING:
+    from api.immeubles.immeuble import Immeuble
 
-class Immeuble(SQLModel, table=True):
-    identifiant : int = Field(primary_key=True) 
-    nom : str 
-    adresse : str 
-    syndicat : int 
+# class Immeuble(SQLModel, table=True):
+#     identifiant : int = Field(primary_key=True) 
+#     nom : str 
+#     adresse : str 
+#     syndicat : int 
     
-    appartements : list["Appartement"] = Relationship(back_populates="immeuble")
+#     appartements : list["Appartement"] = Relationship(back_populates="immeuble")
     
     
 
