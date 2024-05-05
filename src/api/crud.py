@@ -1,8 +1,9 @@
 from sqlmodel import Session
-from api.engine import Engine
 from api.models import Immeuble, Appartement, Personne, Syndicat
+from api.engine import Engine
 
-from typing import Protocol, TypeVar
+
+from typing import Final, Protocol, TypeVar
 
 
 T = TypeVar("T")
@@ -25,13 +26,22 @@ class CRUD(Protocol[T]):
 
 
 
+""" 
 
+What should it do for better interface ?
+
+- Create with a an `Immeuble` object
+- Create only with an immeuble data 
+- Create with immeuble data without id
+
+"""
 class ImmeubleCRUD(CRUD[Immeuble]):
+    """Base class used to manipulate `Immeuble` table with a CRUD behavior"""
     def __init__(self, engine : Engine) -> None:
         self.__engine = engine
         
         
-    @property
+    @property 
     def engine(self) -> Engine:
         return self.__engine.engine
     
@@ -40,6 +50,16 @@ class ImmeubleCRUD(CRUD[Immeuble]):
         with Session(self.engine) as session:
             session.add(immeuble)
             session.commit()
+            
+            
+    def create_from_data(self, identifiant : str, nom : str, adresse : str, syndicat : int) -> None:
+        immeuble = Immeuble(identifiant=identifiant, nom=nom, adresse=adresse, syndicat=syndicat)
+        self.create(immeuble)
+        
+        
+    def create_from_data_without_id(self, nom : str, adresse : str, syndicat : int) -> None:
+        immeuble = Immeuble(nom=nom, adresse=adresse, syndicat=syndicat)
+        self.create(immeuble)
             
             
     def read(self, id : int) -> Immeuble:
@@ -65,10 +85,7 @@ class AppartementCRUD(CRUD[Appartement]):
     def __init__(self, engine : Engine) -> None:
         self.__engine = engine
         
-        
-    @property
-    def engine(self) -> Engine:
-        return self.__engine.engine
+
     
     
     def create(self, appartement : Appartement) -> None:
@@ -100,11 +117,7 @@ class AppartementCRUD(CRUD[Appartement]):
 class PersonneCRUD(CRUD[Personne]):
     def __init__(self, engine : Engine) -> None:
         self.__engine = engine
-        
-        
-    @property
-    def engine(self) -> Engine:
-        return self.__engine.engine
+
     
     
     def create(self, personne : Personne) -> None:
@@ -136,11 +149,6 @@ class PersonneCRUD(CRUD[Personne]):
 class SyndicatCRUD(CRUD[Syndicat]):
     def __init__(self, engine : Engine) -> None:
         self.__engine = engine
-        
-        
-    @property
-    def engine(self) -> Engine:
-        return self.__engine.engine
     
     
     def create(self, syndicat : Syndicat) -> None:
