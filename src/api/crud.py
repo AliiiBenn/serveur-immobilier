@@ -1,7 +1,9 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
+
+
 from api.models import Immeuble, Appartement, Personne, Syndicat
 from api.engine import Engine
-
 
 from typing import Final, Protocol, TypeVar
 
@@ -34,7 +36,24 @@ What should it do for better interface ?
 - Create only with an immeuble data 
 - Create with immeuble data without id
 
+
+- Custom errors 
+
 """
+
+class ImmeubleWithIDAlreadyExistsError(ValueError):
+    def __init__(self, message : str, immeuble : Immeuble) -> None:
+        super().__init__(message)
+        self.immeuble = immeuble
+        
+        
+        
+class ImmeubleWithNameAndAdresseAlreadyExistsError(ValueError):
+    def __init__(self, message : str, immeuble : Immeuble) -> None:
+        super().__init__(message)
+        self.immeuble = immeuble
+
+
 class ImmeubleCRUD(CRUD[Immeuble]):
     """Base class used to manipulate `Immeuble` table with a CRUD behavior"""
     def __init__(self, engine : Engine) -> None:
@@ -46,13 +65,49 @@ class ImmeubleCRUD(CRUD[Immeuble]):
         return self.__engine.engine
     
     
+    # TODO: Check if an immeuble with the same name and adresse already exists
     def create(self, immeuble : Immeuble) -> None:
-        with Session(self.engine) as session:
-            session.add(immeuble)
-            session.commit()
+        """Create a new immeuble and append it to the database
+
+        Args:
+            immeuble (`Immeuble`): The immeuble to create
+
+        Raises:
+            `ImmeubleAlreadyExistsError`: In case an immeuble with the ID already exists
+
+        It is pretty simple to use this method. Here's an example:
+        
+        ```python
+        immeuble = Immeuble(identifiant=1, nom="Test", adresse="test", syndicat=1) # Create a new immeuble object
+        crud.create(immeuble)
+        ```
+
+        """
+        def already_exists(nom : str, adresse : str) -> bool:
+            """Local function to check if an immeuble with the same name and adresse already exists"""
+            return self.read_from_name_and_adresse(nom, adresse) is not None
+        
+        
+        try:
+            if already_exists(immeuble.nom, immeuble.adresse):
+                raise ImmeubleWithNameAndAdresseAlreadyExistsError(
+                    "An immeuble with the same name and adresse already exists",
+                    immeuble
+                )
+            
+            with Session(self.engine) as session:
+                session.add(immeuble)
+                session.commit()
+        except IntegrityError as e:
+            e.add_note(f"The id of the immeuble that already exists is {immeuble.identifiant}")
+            
+            raise ImmeubleWithIDAlreadyExistsError(
+                f"An immeuble with the same id already exists",
+                immeuble
+            ) from e
             
             
-    def create_from_data(self, identifiant : str, nom : str, adresse : str, syndicat : int) -> None:
+    def create_from_data(self, identifiant : int, nom : str, adresse : str, syndicat : int) -> None:
         immeuble = Immeuble(identifiant=identifiant, nom=nom, adresse=adresse, syndicat=syndicat)
         self.create(immeuble)
         
@@ -64,8 +119,17 @@ class ImmeubleCRUD(CRUD[Immeuble]):
             
     def read(self, id : int) -> Immeuble:
         with Session(self.engine) as session:
-            return session.exec(Immeuble).get(id)
-    
+            return session.get(Immeuble, id)
+        
+        
+    def read_from_name_and_adresse(self, nom : str, adresse : str) -> Immeuble:
+        with Session(self.engine) as session:
+            immeuble = session.exec(
+                select(Immeuble).where(Immeuble.nom == nom).where(Immeuble.adresse == adresse)
+            )
+            
+            return immeuble.first()
+        
     
     def update(self, immeuble : Immeuble) -> None:
         with Session(self.engine) as session:

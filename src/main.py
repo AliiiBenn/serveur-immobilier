@@ -40,9 +40,14 @@ from api.crud import ImmeubleCRUD, CRUD
 if __name__ == "__main__":
     
     engine = Engine()
+    new_engine = Engine()
     engine.create_all()
     
     crud = ImmeubleCRUD(engine)
     
-    crud.create(Immeuble(nom="Test", adresse="test", syndicat=1))
     
+    # crud.create(Immeuble(nom="Test", adresse="test", syndicat=1))
+    
+    crud.create_from_data_without_id("Test", "testt", 1)
+    
+    print(crud.read_from_name_and_adresse("Test", "testt"))
