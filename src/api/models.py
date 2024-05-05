@@ -1,9 +1,14 @@
-from typing import Self
+from typing import Final, Literal, Optional, Self
 import warnings
 from sqlmodel import Field, SQLModel, Session, create_engine, Relationship
 
-from engine import Engine
+TESTING : Final[bool] = True
 
+
+if TESTING:
+    from engine import Engine
+else:
+    from api.engine import Engine 
 
 
 class Immeuble(SQLModel, table=True):
@@ -23,13 +28,34 @@ class Appartement(SQLModel, table=True):
     numero : int = Field(default=0)
     superficie : int
     
-    immeuble : "Immeuble" = Relationship(back_populates="appartements")
+    id_immeuble : int | None = Field(default=None, foreign_key="immeuble.identifiant")
+    immeuble : Optional["Immeuble"] = Relationship(back_populates="appartements")
     
-    # TODO: Liste de personnes liées à l'appartement
+    personnes : list["Personne"] = Relationship(back_populates="appartement")
     
     
+class Personne(SQLModel, table=True):
+    identifiant : int = Field(primary_key=True)
+    
+    nom : str 
+    prenom : str
+    telephone : str
+    
+    status : str
+    
+    id_appartement : int | None = Field(default=None, foreign_key="appartement.identifiant")
+    appartement : Optional["Appartement"] = Relationship(back_populates="personnes")
 
 
+class Syndicat(SQLModel, table=True):
+    identifiant : int = Field(primary_key=True)
+    
+    nom : str 
+    adresse : str
+    telephone : str
+    email : str
+    
+    referente : int | None = Field(default=None, foreign_key="personne.identifiant")
 
 
 
@@ -40,7 +66,27 @@ if __name__ == '__main__':
     
     SQLModel.metadata.create_all(engine.engine)
     
-    appa = Appartement(identifiant=1)
+    # with Session(engine.engine) as session:
+    #     immeuble = Immeuble(
+    #         identifiant=2,
+    #         nom="Immeuble",
+    #         adresse="Adresse",
+    #         syndicat=1
+    #     )
+        
+    #     appartement = Appartement(identifiant=1, superficie=134, immeuble=immeuble)
+    #     appartement2 = Appartement(identifiant=2, superficie=134, immeuble=immeuble)
+        
+        
+    #     appartement.immeuble = immeuble
+    #     appartement2.immeuble = immeuble
+        
+    #     session.add(appartement)
+    #     session.add(appartement2)
+        
+    #     print(immeuble.appartements)
+        
+    #     session.commit()
     
     
 
