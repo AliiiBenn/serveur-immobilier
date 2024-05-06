@@ -8,6 +8,7 @@ from api.engine import Engine
 from typing import Final, Protocol, TypeVar
 
 
+
 T = TypeVar("T")
 
 
@@ -52,6 +53,14 @@ class ImmeubleWithNameAndAdresseAlreadyExistsError(ValueError):
     def __init__(self, message : str, immeuble : Immeuble) -> None:
         super().__init__(message)
         self.immeuble = immeuble
+        
+        
+        
+class ImmeubleNotFoundError(ValueError):
+    def __init__(self, message : str) -> None:
+        super().__init__(message)
+        
+        
 
 
 class ImmeubleCRUD(CRUD[Immeuble]):
@@ -65,7 +74,6 @@ class ImmeubleCRUD(CRUD[Immeuble]):
         return self.__engine.engine
     
     
-    # TODO: Check if an immeuble with the same name and adresse already exists
     def create(self, immeuble : Immeuble) -> None:
         """Create a new immeuble and append it to the database
 
@@ -117,12 +125,15 @@ class ImmeubleCRUD(CRUD[Immeuble]):
         self.create(immeuble)
             
             
-    def read(self, id : int) -> Immeuble:
+    def read(self, id : int) -> Immeuble | None:
         with Session(self.engine) as session:
-            return session.get(Immeuble, id)
+            # return session.get(Immeuble, id)
+            immeuble = session.exec(select(Immeuble).where(Immeuble.identifiant == id))
+            
+            return immeuble.first()
         
         
-    def read_from_name_and_adresse(self, nom : str, adresse : str) -> Immeuble:
+    def read_from_name_and_adresse(self, nom : str, adresse : str) -> Immeuble | None:
         with Session(self.engine) as session:
             immeuble = session.exec(
                 select(Immeuble).where(Immeuble.nom == nom).where(Immeuble.adresse == adresse)
@@ -135,6 +146,23 @@ class ImmeubleCRUD(CRUD[Immeuble]):
         with Session(self.engine) as session:
             session.add(immeuble)
             session.commit()
+            
+            
+    # TODO: Add a new method to update the immeuble with an immeuble as parameter
+    def update_immeuble(self, id_immeuble : int, new_immeuble : Immeuble) -> None:
+        with Session(self.engine) as session:
+            current_immeuble = session.get(Immeuble, id_immeuble)
+            
+            if current_immeuble is None:
+                raise ImmeubleNotFoundError(f"An immeuble with the id {id_immeuble} does not exist")
+            
+            current_immeuble.nom = new_immeuble.nom
+            current_immeuble.adresse = new_immeuble.adresse
+            current_immeuble.syndicat = new_immeuble.syndicat
+            
+            session.add(current_immeuble)
+            session.commit()
+            session.refresh(current_immeuble)
             
             
     def delete(self, id : int) -> None:
