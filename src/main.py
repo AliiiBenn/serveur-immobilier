@@ -56,11 +56,8 @@ POST /immeubles/appartements -> Ajoute un nouvel appartement à partir des infor
 
 if __name__ == "__main__":
     engine = Engine()
+    engine.create_all()
+    
     crud = ImmeubleCRUD(engine)
     
-    # crud.create_from_data_without_id("qzd", "Test", 1)
-    
-    # immeuble = Immeuble(nom="Je suis un message de test", adresse="Test", syndicat=1)
-    
-    # crud.update_immeuble(1, immeuble)
-    crud.delete(1)
+
