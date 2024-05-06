@@ -167,7 +167,12 @@ class ImmeubleCRUD(CRUD[Immeuble]):
             
     def delete(self, id : int) -> None:
         with Session(self.engine) as session:
-            session.delete(session.exec(Immeuble).get(id))
+            immeuble = self.read(id)
+            
+            if immeuble is None:
+                raise ImmeubleNotFoundError(f"An immeuble with the id {id} does not exist")
+            
+            session.delete(immeuble)
             session.commit()
             
             
