@@ -8,6 +8,7 @@ from api.engine import Engine
 from typing import Final, Protocol, TypeVar
 
 
+
 T = TypeVar("T")
 
 
@@ -20,7 +21,7 @@ class CRUD(Protocol[T]):
     def read(self, id : int) -> T:
         ...
     
-    def update(self, obj : T) -> None:
+    def update(self, id : int, obj : T) -> None:
         ...
     
     def delete(self, id : int) -> None:
@@ -52,6 +53,14 @@ class ImmeubleWithNameAndAdresseAlreadyExistsError(ValueError):
     def __init__(self, message : str, immeuble : Immeuble) -> None:
         super().__init__(message)
         self.immeuble = immeuble
+        
+        
+        
+class ImmeubleNotFoundError(ValueError):
+    def __init__(self, message : str) -> None:
+        super().__init__(message)
+        
+        
 
 
 class ImmeubleCRUD(CRUD[Immeuble]):
@@ -65,7 +74,6 @@ class ImmeubleCRUD(CRUD[Immeuble]):
         return self.__engine.engine
     
     
-    # TODO: Check if an immeuble with the same name and adresse already exists
     def create(self, immeuble : Immeuble) -> None:
         """Create a new immeuble and append it to the database
 
@@ -117,12 +125,15 @@ class ImmeubleCRUD(CRUD[Immeuble]):
         self.create(immeuble)
             
             
-    def read(self, id : int) -> Immeuble:
+    def read(self, id : int) -> Immeuble | None:
         with Session(self.engine) as session:
-            return session.get(Immeuble, id)
+            # return session.get(Immeuble, id)
+            immeuble = session.exec(select(Immeuble).where(Immeuble.identifiant == id))
+            
+            return immeuble.first()
         
         
-    def read_from_name_and_adresse(self, nom : str, adresse : str) -> Immeuble:
+    def read_from_name_and_adresse(self, nom : str, adresse : str) -> Immeuble | None:
         with Session(self.engine) as session:
             immeuble = session.exec(
                 select(Immeuble).where(Immeuble.nom == nom).where(Immeuble.adresse == adresse)
@@ -131,18 +142,38 @@ class ImmeubleCRUD(CRUD[Immeuble]):
             return immeuble.first()
         
     
-    def update(self, immeuble : Immeuble) -> None:
+            
+    # TODO: Add a new method to update the immeuble with an immeuble as parameter
+    def update(self, id : int, new_immeuble : Immeuble) -> None:
         with Session(self.engine) as session:
-            session.add(immeuble)
+            current_immeuble = self.read(id)
+            
+            if current_immeuble is None:
+                raise ImmeubleNotFoundError(f"An immeuble with the id {id} does not exist")
+            
+            current_immeuble.nom = new_immeuble.nom
+            current_immeuble.adresse = new_immeuble.adresse
+            current_immeuble.syndicat = new_immeuble.syndicat
+            
+            session.add(current_immeuble)
             session.commit()
+            session.refresh(current_immeuble)
             
             
     def delete(self, id : int) -> None:
         with Session(self.engine) as session:
-            session.delete(session.exec(Immeuble).get(id))
+            immeuble = self.read(id)
+            
+            if immeuble is None:
+                raise ImmeubleNotFoundError(f"An immeuble with the id {id} does not exist")
+            
+            session.delete(immeuble)
             session.commit()
             
             
+class AppartementNotFoundError(ValueError):
+    def __init__(self, message : str) -> None:
+        super().__init__(message)
             
             
 class AppartementCRUD(CRUD[Appartement]):
@@ -150,6 +181,9 @@ class AppartementCRUD(CRUD[Appartement]):
         self.__engine = engine
         
 
+    @property
+    def engine(self) -> Engine:
+        return self.__engine.engine
     
     
     def create(self, appartement : Appartement) -> None:
@@ -158,29 +192,55 @@ class AppartementCRUD(CRUD[Appartement]):
             session.commit()
             
             
-    def read(self, id : int) -> Appartement:
+    def read(self, id : int) -> Appartement | None:
         with Session(self.engine) as session:
-            return session.exec(Appartement).get(id)
-    
-    
-    def update(self, appartement : Appartement) -> None:
+            appartement = session.exec(select(Appartement).where(Appartement.identifiant == id))
+            
+            return appartement.first()
+        
+        
+    def update(self, id : int, appartement : Appartement) -> None:
         with Session(self.engine) as session:
-            session.add(appartement)
+            current_appartement = self.read(id)
+            
+            if current_appartement is None:
+                raise AppartementNotFoundError(f"An appartement with the id {id} does not exist")
+            
+            current_appartement.etage = appartement.etage
+            current_appartement.numero = appartement.numero
+            current_appartement.superficie = appartement.superficie
+            
+            session.add(current_appartement)
             session.commit()
+            session.refresh(current_appartement)
             
             
     def delete(self, id : int) -> None:
         with Session(self.engine) as session:
-            session.delete(session.exec(Appartement).get(id))
+            current_appartement = self.read(id)
+            
+            if current_appartement is None:
+                raise AppartementNotFoundError(f"An appartement with the id {id} does not exist")
+            
+            session.delete(current_appartement)
             session.commit()
             
             
-            
+        
+
+class PersonneNotFoundError(ValueError):
+    def __init__(self, message : str) -> None:
+        super().__init__(message)
             
             
 class PersonneCRUD(CRUD[Personne]):
     def __init__(self, engine : Engine) -> None:
         self.__engine = engine
+        
+        
+    @property
+    def engine(self) -> Engine:
+        return self.__engine.engine
 
     
     
@@ -190,29 +250,58 @@ class PersonneCRUD(CRUD[Personne]):
             session.commit()
             
             
-    def read(self, id : int) -> Personne:
+    def read(self, id : int) -> Personne | None:
         with Session(self.engine) as session:
-            return session.exec(Personne).get(id)
+            personne = session.exec(Personne).get(id)
+            
+            return personne 
         
         
-    def update(self, personne : Personne) -> None:
+        
+        
+    def update(self, id : int,personne : Personne) -> None:
         with Session(self.engine) as session:
-            session.add(personne)
+            current_personne = self.read(id)
+            
+            if current_personne is None:
+                raise PersonneNotFoundError(f"A personne with the id {id} does not exist")
+            
+            
+            current_personne.nom = personne.nom
+            current_personne.prenom = personne.prenom
+            current_personne.telephone = personne.telephone
+            
+            session.add(current_personne)
             session.commit()
+            session.refresh(current_personne)
             
             
     def delete(self, id : int) -> None:
         with Session(self.engine) as session:
-            session.delete(session.exec(Personne).get(id))
+            personne = self.read(id)
+            
+            if personne is None:
+                raise PersonneNotFoundError(f"A personne with the id {id} does not exist")
+            
+            session.delete(personne)
             session.commit()
             
             
-            
+
+class SyndicatNotFoundError(ValueError):
+    def __init__(self, message : str) -> None:
+        super().__init__(message)
+
             
             
 class SyndicatCRUD(CRUD[Syndicat]):
     def __init__(self, engine : Engine) -> None:
         self.__engine = engine
+    
+    
+    @property
+    def engine(self) -> Engine:
+        return self.__engine.engine
     
     
     def create(self, syndicat : Syndicat) -> None:
@@ -221,18 +310,35 @@ class SyndicatCRUD(CRUD[Syndicat]):
             session.commit()
             
             
-    def read(self, id : int) -> Syndicat:
+    def read(self, id : int) -> Syndicat | None:
         with Session(self.engine) as session:
-            return session.exec(Syndicat).get(id)
-    
-    
-    def update(self, syndicat : Syndicat) -> None:
+            syndicat = session.exec(select(Syndicat).where(Syndicat.identifiant == id))
+            
+            return syndicat.first()
+        
+        
+    def update(self, id : int, syndicat : Syndicat) -> None:
         with Session(self.engine) as session:
-            session.add(syndicat)
+            current_syndicat = self.read(id)
+            
+            if current_syndicat is None:
+                raise SyndicatNotFoundError(f"A syndicat with the id {id} does not exist")
+            
+            current_syndicat.nom = syndicat.nom
+            current_syndicat.adresse = syndicat.adresse
+            current_syndicat.telephone = syndicat.telephone
+            current_syndicat.email = syndicat.email
+            
+            session.add(current_syndicat)
             session.commit()
+            session.refresh(current_syndicat)
             
             
-    def delete(self, id : int) -> None:
+    def delete(self, id : int) -> None: 
         with Session(self.engine) as session:
-            session.delete(session.exec(Syndicat).get(id))
-            session.commit()
+            current_syndicat = self.read(id)
+            
+            if current_syndicat is None:
+                raise SyndicatNotFoundError(f"A syndicat with the id {id} does not exist")
+            
+            session.delete(current_syndicat)

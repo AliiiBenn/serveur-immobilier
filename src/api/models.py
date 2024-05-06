@@ -4,6 +4,12 @@ from sqlmodel import Field, SQLModel, Relationship
 
 
 
+""" 
+
+TODO: Ajouter une nouvelle table Compte qui prends en paramètre un email et un mot de passe et qui est relié à une personne. Quand une personne s'inscrit, on crée un compte ET une personne. 
+
+"""
+
 
 
 class Immeuble(SQLModel, table=True):
