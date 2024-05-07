@@ -7,7 +7,7 @@ import warnings
 
 
 class Engine:
-    PATH : ClassVar[str] = "sqlite:///database/main.db"
+    PATH : ClassVar[str] = "sqlite:///../database/main.db"
     ECHO : ClassVar[bool] = False
     
     

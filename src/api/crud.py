@@ -2,7 +2,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
-from api.models import Immeuble, Appartement, Personne, Syndicat, Compte
+from api.models import Immeuble, Appartement, Personne, Syndicat
 from api.engine import Engine
 
 from typing import Final, Protocol, TypeVar
@@ -351,49 +351,49 @@ class CompteNotFoundError(ValueError):
         super().__init__(message)
         
         
-class CompteCRUD(CRUD[Compte]):
-    def __init__(self, engine : Engine) -> None:
-        self.__engine = engine
+# class CompteCRUD(CRUD[Compte]):
+    # def __init__(self, engine : Engine) -> None:
+    #     self.__engine = engine
         
         
-    @property
-    def engine(self) -> Engine:
-        return self.__engine.engine
+    # @property
+    # def engine(self) -> Engine:
+    #     return self.__engine.engine
     
     
-    def create(self, compte : Compte) -> None:
-        with Session(self.engine) as session:
-            session.add(compte)
-            session.commit()
+    # def create(self, compte : Compte) -> None:
+    #     with Session(self.engine) as session:
+    #         session.add(compte)
+    #         session.commit()
             
             
-    def read(self, id : int) -> Compte | None:
-        with Session(self.engine) as session:
-            compte = session.exec(select(Compte).where(Compte.identifiant == id))
+    # def read(self, id : int) -> Compte | None:
+    #     with Session(self.engine) as session:
+    #         compte = session.exec(select(Compte).where(Compte.identifiant == id))
             
-            return compte.first()
+    #         return compte.first()
         
         
-    def update(self, id : int, compte : Compte) -> None:
-        with Session(self.engine) as session:
-            current_compte = self.read(id)
+    # def update(self, id : int, compte : Compte) -> None:
+    #     with Session(self.engine) as session:
+    #         current_compte = self.read(id)
             
-            if current_compte is None:
-                raise CompteNotFoundError(f"A compte with the id {id} does not exist")
+    #         if current_compte is None:
+    #             raise CompteNotFoundError(f"A compte with the id {id} does not exist")
             
-            current_compte.email = compte.email
-            current_compte.mot_de_passe = compte.mot_de_passe
+    #         current_compte.email = compte.email
+    #         current_compte.mot_de_passe = compte.mot_de_passe
             
-            session.add(current_compte)
-            session.commit()
-            session.refresh(current_compte)
+    #         session.add(current_compte)
+    #         session.commit()
+    #         session.refresh(current_compte)
             
             
-    def delete(self, id : int) -> None: 
-        with Session(self.engine) as session:
-            current_compte = self.read(id)
+    # def delete(self, id : int) -> None: 
+    #     with Session(self.engine) as session:
+    #         current_compte = self.read(id)
             
-            if current_compte is None:
-                raise CompteNotFoundError(f"A compte with the id {id} does not exist")
+    #         if current_compte is None:
+    #             raise CompteNotFoundError(f"A compte with the id {id} does not exist")
             
-            session.delete(current_compte)
+    #         session.delete(current_compte)

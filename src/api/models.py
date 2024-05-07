@@ -37,14 +37,14 @@ class Appartement(SQLModel, table=True):
     
 
 
-class Compte(SQLModel, table=True):
-    identifiant : int = Field(primary_key=True)
+# class Compte(SQLModel, table=True):
+#     identifiant : int = Field(primary_key=True)
     
-    email : str 
-    mot_de_passe : str
+#     email : str 
+#     mot_de_passe : str
     
-    id_personne : int | None = Field(default=None, foreign_key="personne.identifiant")
-    personne : Optional["Personne"] = Relationship(back_populates="comptes")
+#     id_personne : int | None = Field(default=None, foreign_key="personne.identifiant")
+#     personne : Optional["Personne"] = Relationship(back_populates="comptes")
     
     
 class Personne(SQLModel, table=True):
@@ -72,3 +72,11 @@ class Syndicat(SQLModel, table=True):
 
 
 
+
+
+class Compte(SQLModel, table=True):
+    identifiant : int = Field(primary_key=True)
+    
+    nom : str
+    email : str
+    mot_de_passe_crypt : str

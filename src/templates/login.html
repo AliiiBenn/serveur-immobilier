@@ -1,53 +1,20 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="corporate">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.1/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>Connexion</title>
-</head>
-<body>
-    <div class="navbar bg-neutral text-neutral-content">
-        <button class="btn btn-ghost text-xl">ImmoLux</button>
-    </div>
+<h1>Login 🫥</h1>
 
-    <div class="hero bg-base-200">
-        <div class="hero-content flex-col lg:flex-row-reverse">
-            <div class="text-center lg:text-left">
-                <h1 class="text-5xl font-bold">Connexion</h1>
-                <p class="py-6">Provident cupiditate voluptatem et in. Quaerat fugiat ut assumenda excepturi exercitationem
-                    quasi. In deleniti eaque aut repudiandae et a id nisi.</p>
-            </div>
-            <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-                <form class="card-body">
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Email</span>
-                        </label>
-                        <input type="email" placeholder="email" class="input input-bordered" required />
-                    </div>
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Mot de passe</span>
-                        </label>
-                        <input type="password" placeholder="mot de passe" class="input input-bordered" required />
-                        <label class="label">
-                            <a href="#" class="label-text-alt link link-hover">Mot de passe oublié ?</a>
-                        </label>
-                    </div>
-                    <div class="form-control mt-6">
-                        <button class="btn btn-primary text-neutral-content">Connexion</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+{% for error in errors %}
+<p style="color: red">{{ error }}</p>
+{% endfor %}
+<form action="/auth/login" method="post">
+    <p>
+    <p><label for="">Email</label></p>
+    <input type="email" name="username" value="{{ username }}" required>
+    </p>
+    <p>
+    <p><label for="">Password</label></p>
+    <input type="password" name="password" value="{{ password }}" required>
+    </p>
+    <input type="submit" value="Submit">
+</form>
 
-    <footer class="footer footer-center p-4 bg-neutral text-base-content">
-        <aside>
-            <p class="text-neutral-content">Copyright © 2024 - All right reserved by ImmoLux Industries Ltd</p>
-        </aside>
-    </footer>
-</body>
-</html>
+<hr>
+
+{% include '_site_map.html' %}
