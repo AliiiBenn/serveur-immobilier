@@ -52,17 +52,6 @@ def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestF
 # --------------------------------------------------------------------------
 # Home Page
 # --------------------------------------------------------------------------
-@router.get("/", response_class=HTMLResponse)
-def index(request: Request):
-    try:
-        user = get_current_user_from_cookie(request)
-    except:
-        user = None
-    context = {
-        "user": user,
-        "request": request,
-    }
-    return templates.TemplateResponse("index.html", context)
 
 
 # --------------------------------------------------------------------------
@@ -153,13 +142,11 @@ def signup_get(request: Request):
 
 @router.post("/auth/signup", response_class=HTMLResponse)
 async def signup_post(request: Request):
-    print("signupzdqdzzq")
     form = LoginForm(request)
     await form.load_data()
     if await form.is_valid():
         try:
             with Session(engine.engine) as session:
-                print("signup")
                 compte = Compte(
                     email=form.username,
                     mot_de_passe_crypt=crypto.hash(form.password)

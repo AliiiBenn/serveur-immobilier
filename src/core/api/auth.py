@@ -39,7 +39,6 @@ def get_user(username: str) -> Optional[Compte]:
     with Session(engine.engine) as session:
         user = session.exec(select(Compte).where(Compte.email == username)).first()
     
-    print("users", user)
     return user
 
 
