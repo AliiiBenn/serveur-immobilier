@@ -77,6 +77,5 @@ class Syndicat(SQLModel, table=True):
 class Compte(SQLModel, table=True):
     identifiant : int = Field(primary_key=True)
     
-    nom : str
     email : str
     mot_de_passe_crypt : str

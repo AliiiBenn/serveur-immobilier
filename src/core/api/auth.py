@@ -8,31 +8,39 @@ from fastapi.security.oauth2 import get_authorization_scheme_param, OAuthFlowsMo
 from jose import JWTError, jwt
 import datetime as dt
 
+from sqlmodel import Session, select
+
+from .models import Compte
+from .engine import Engine
 
 
-class User(BaseModel):
-    username: str
-    hashed_password: str
+
+# class User(BaseModel):
+#     username: str
+#     hashed_password: str
 
 
-# Create a "database" to hold your data. This is just for example purposes. In
-# a real world scenario you would likely connect to a SQL or NoSQL database.
-class DataBase(BaseModel):
-    user: list[User]
+# # Create a "database" to hold your data. This is just for example purposes. In
+# # a real world scenario you would likely connect to a SQL or NoSQL database.
+# class DataBase(BaseModel):
+#     user: list[User]
 
-DB = DataBase(
-    user=[
-        User(username="user1@gmail.com", hashed_password=crypto.hash("12345")),
-        User(username="user2@gmail.com", hashed_password=crypto.hash("12345")),
-    ]
-)
+# DB = DataBase(
+#     user=[
+#         User(username="user1@gmail.com", hashed_password=crypto.hash("12345")),
+#         User(username="user2@gmail.com", hashed_password=crypto.hash("12345")),
+#     ]
+# )
+
+engine = Engine()
 
 
-def get_user(username: str) -> Optional[User]:
-    user = [user for user in DB.user if user.username == username]
-    if user:
-        return user[0]
-    return None
+def get_user(username: str) -> Optional[Compte]:
+    with Session(engine.engine) as session:
+        user = session.exec(select(Compte).where(Compte.email == username)).first()
+    
+    print("users", user)
+    return user
 
 
 
@@ -105,16 +113,16 @@ def create_access_token(data: dict) -> str:
     return encoded_jwt
 
 
-def authenticate_user(username: str, plain_password: str) -> User | bool:
+def authenticate_user(username: str, plain_password: str) -> Compte | bool:
     user = get_user(username)
     if not user:
         return False
-    if not crypto.verify(plain_password, user.hashed_password):
+    if not crypto.verify(plain_password, user.mot_de_passe_crypt):
         return False
     return user
 
 
-def decode_token(token: str | None) -> User | None:
+def decode_token(token: str | None) -> Compte | None:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, 
         detail="Could not validate credentials."
@@ -133,7 +141,7 @@ def decode_token(token: str | None) -> User | None:
     return user
 
 
-def get_current_user_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
+def get_current_user_from_token(token: str = Depends(oauth2_scheme)) -> Compte | None:
     """
     Get the current user from the cookies in a request.
 
@@ -144,7 +152,7 @@ def get_current_user_from_token(token: str = Depends(oauth2_scheme)) -> User | N
     return user
 
 
-def get_current_user_from_cookie(request: Request) -> User | None:
+def get_current_user_from_cookie(request: Request) -> Compte | None:
     """
     Get the current user from the cookies in a request.
     
