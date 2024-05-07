@@ -10,34 +10,19 @@ import datetime as dt
 
 from sqlmodel import Session, select
 
-from .models import Compte
+from .models import Proprietaire
 from .engine import Engine
 
 
 
-# class User(BaseModel):
-#     username: str
-#     hashed_password: str
 
-
-# # Create a "database" to hold your data. This is just for example purposes. In
-# # a real world scenario you would likely connect to a SQL or NoSQL database.
-# class DataBase(BaseModel):
-#     user: list[User]
-
-# DB = DataBase(
-#     user=[
-#         User(username="user1@gmail.com", hashed_password=crypto.hash("12345")),
-#         User(username="user2@gmail.com", hashed_password=crypto.hash("12345")),
-#     ]
-# )
 
 engine = Engine()
 
 
-def get_user(username: str) -> Optional[Compte]:
+def get_user(username: str) -> Optional[Proprietaire]:
     with Session(engine.engine) as session:
-        user = session.exec(select(Compte).where(Compte.email == username)).first()
+        user = session.exec(select(Proprietaire).where(Proprietaire.email == username)).first()
     
     return user
 
@@ -112,16 +97,16 @@ def create_access_token(data: dict) -> str:
     return encoded_jwt
 
 
-def authenticate_user(username: str, plain_password: str) -> Compte | bool:
+def authenticate_user(username: str, plain_password: str) -> Proprietaire | bool:
     user = get_user(username)
     if not user:
         return False
-    if not crypto.verify(plain_password, user.mot_de_passe_crypt):
+    if not crypto.verify(plain_password, user.mot_de_passe_hash):
         return False
     return user
 
 
-def decode_token(token: str | None) -> Compte | None:
+def decode_token(token: str | None) -> Proprietaire | None:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, 
         detail="Could not validate credentials."
@@ -140,7 +125,7 @@ def decode_token(token: str | None) -> Compte | None:
     return user
 
 
-def get_current_user_from_token(token: str = Depends(oauth2_scheme)) -> Compte | None:
+def get_current_user_from_token(token: str = Depends(oauth2_scheme)) -> Proprietaire | None:
     """
     Get the current user from the cookies in a request.
 
@@ -151,7 +136,7 @@ def get_current_user_from_token(token: str = Depends(oauth2_scheme)) -> Compte |
     return user
 
 
-def get_current_user_from_cookie(request: Request) -> Compte | None:
+def get_current_user_from_cookie(request: Request) -> Proprietaire | None:
     """
     Get the current user from the cookies in a request.
     

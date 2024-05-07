@@ -16,7 +16,7 @@ from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 
 
 
-from core.api.models import Compte
+from core.api.models import Proprietaire
 from core.api.auth import Settings, create_access_token, get_current_user_from_cookie, get_current_user_from_token, authenticate_user
 
 from core.api.engine import Engine
@@ -36,7 +36,7 @@ def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestF
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
     
-    assert isinstance(user, Compte)
+    assert isinstance(user, Proprietaire)
     access_token = create_access_token(data={"username": user.email})
     
     # Set an HttpOnly cookie in the response. `httponly=True` prevents 
@@ -59,7 +59,7 @@ def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestF
 # --------------------------------------------------------------------------
 # A private page that only logged in users can access.
 @router.get("/private", response_class=HTMLResponse)
-def private(request: Request, user: Compte = Depends(get_current_user_from_token)):
+def private(request: Request, user: Proprietaire = Depends(get_current_user_from_token)):
     context = {
         "user": user,
         "request": request
@@ -84,13 +84,18 @@ class LoginForm:
     def __init__(self, request: Request):
         self.request: Request = request
         self.errors: list = []
-        self.username: Optional[str] = None
-        self.password: Optional[str] = None
+        
+        
+        self.username : Optional[str] = None
+        self.password : Optional[str] = None
+        
 
     async def load_data(self):
         form = await self.request.form()
         self.username = form.get("username")
         self.password = form.get("password")
+        
+        print(self.password)
 
     async def is_valid(self):
         if not self.username:
@@ -100,6 +105,9 @@ class LoginForm:
         if not self.errors:
             return True
         return False
+    
+    
+    
 
 
 @router.post("/auth/login", response_class=HTMLResponse)
@@ -140,16 +148,44 @@ def signup_get(request: Request):
     return templates.TemplateResponse("signup.html", context)
 
 
+
+class SignupForm(LoginForm):
+    def __init__(self, request: Request):
+        super().__init__(request)
+        
+        self.prenom : Optional[str] = None
+        self.nom : Optional[str] = None
+        self.telephone : Optional[str] = None
+        
+        
+    async def load_data(self):
+        form = await self.request.form()
+        self.prenom = form.get("prenom")
+        self.nom = form.get("nom")
+        self.telephone = form.get("telephone")
+        
+        self.username = form.get("username")
+        self.password = form.get("password")
+
+
+
 @router.post("/auth/signup", response_class=HTMLResponse)
 async def signup_post(request: Request):
-    form = LoginForm(request)
+    form = SignupForm(request)
     await form.load_data()
     if await form.is_valid():
         try:
+            hashed_password = crypto.hash(form.password)
+            
+            print(hashed_password)
+            
             with Session(engine.engine) as session:
-                compte = Compte(
+                compte = Proprietaire(
+                    prenom=form.prenom,
+                    nom=form.nom,
+                    telephone=form.telephone,
                     email=form.username,
-                    mot_de_passe_crypt=crypto.hash(form.password)
+                    mot_de_passe_hash=crypto.hash(form.password)
                 )
                 
                 session.add(compte)

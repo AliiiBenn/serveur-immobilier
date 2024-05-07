@@ -32,6 +32,9 @@ class Engine:
         SQLModel.metadata.create_all(self.engine)
     
     
+    def clear(self):
+        SQLModel.metadata.drop_all(self.engine)
+    
     
     
     

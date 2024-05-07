@@ -9,5 +9,13 @@
 </head>
 <body>
     {% include "_header.html" %}
+
+    {% for immeuble in immeubles %}
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ immeuble.nom }}</h5>
+            <p class="card-text">{{ immeuble.adresse }}</p>
+        </div>
+    {% endfor %}
 </body>
 </html>

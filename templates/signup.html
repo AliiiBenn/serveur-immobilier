@@ -41,11 +41,34 @@
                 <form class="card-body" action="/auth/signup" method="post">
                     <div class="form-control">
                         <label class="label">
+                            <span class="label-text">Prenom</span>
+                        </label>
+                        <input type="text" placeholder="prenom" class="input input-bordered" name="prenom" value="{{ prenom }}" required />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Nom</span>
+                        </label>
+                        <input type="text" placeholder="nom" class="input input-bordered" name="nom" value="{{ nom }}" required />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Telephone</span>
+                        </label>
+                        <input type="text" placeholder="telephone" class="input input-bordered" name="telephone" value="{{ telephone }}"
+                            required />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
                             <span class="label-text">Email</span>
                         </label>
-                        <input type="email" placeholder="email" class="input input-bordered" name="username"
-                            value="{{ username }}" required />
+                        <input type="email" placeholder="email" class="input input-bordered" name="username" value="{{ username }}"
+                            required />
                     </div>
+
                     <div class="form-control">
                         <label class="label">
                             <span class="label-text">Mot de passe</span>
@@ -53,6 +76,7 @@
                         <input type="password" placeholder="Mot de passe" class="input input-bordered" name="password"
                             value="{{ password }}" required />
                     </div>
+
                     <div class="form-control mt-6">
                         <button type="submit" value="Submit" class="btn btn-primary">Créer mon compte</button>
                     </div>

@@ -1,3 +1,5 @@
+# from __future__ import annotations
+
 from typing import Optional
 import warnings
 from sqlmodel import Field, SQLModel, Relationship
@@ -12,27 +14,27 @@ TODO: Ajouter une nouvelle table Compte qui prends en paramètre un email et un 
 
 
 
-class Immeuble(SQLModel, table=True):
-    identifiant : int = Field(primary_key=True) 
-    nom : str 
-    adresse : str 
-    syndicat : int 
+# class Immeuble(SQLModel, table=True):
+#     identifiant : int = Field(primary_key=True) 
+#     nom : str 
+#     adresse : str 
+#     syndicat : int 
     
-    appartements : list["Appartement"] = Relationship(back_populates="immeuble")
+#     appartements : list["Appartement"] = Relationship(back_populates="immeuble")
     
     
 
-class Appartement(SQLModel, table=True):
-    identifiant : int = Field(primary_key=True)
+# class Appartement(SQLModel, table=True):
+#     identifiant : int = Field(primary_key=True)
     
-    etage : int = Field(default=0)
-    numero : int = Field(default=0)
-    superficie : int
+#     etage : int = Field(default=0)
+#     numero : int = Field(default=0)
+#     superficie : int
     
-    id_immeuble : int | None = Field(default=None, foreign_key="immeuble.identifiant")
-    immeuble : Optional["Immeuble"] = Relationship(back_populates="appartements")
+#     id_immeuble : int | None = Field(default=None, foreign_key="immeuble.identifiant")
+#     immeuble : Optional["Immeuble"] = Relationship(back_populates="appartements")
     
-    personnes : list["Personne"] = Relationship(back_populates="appartement")
+#     personnes : list["Personne"] = Relationship(back_populates="appartement")
     
     
 
@@ -47,38 +49,74 @@ class Appartement(SQLModel, table=True):
 #     personne : Optional["Personne"] = Relationship(back_populates="comptes")
     
     
-class Personne(SQLModel, table=True):
+# class Personne(SQLModel, table=True):
+#     identifiant : int = Field(primary_key=True)
+    
+#     nom : str 
+#     prenom : str
+#     telephone : str
+    
+#     status : str
+    
+#     id_appartement : int | None = Field(default=None, foreign_key="appartement.identifiant")
+#     appartement : Optional["Appartement"] = Relationship(back_populates="personnes")
+
+
+# class Syndicat(SQLModel, table=True):
+#     identifiant : int = Field(primary_key=True)
+    
+#     nom : str 
+#     adresse : str
+#     telephone : str
+#     email : str
+    
+#     referente : int | None = Field(default=None, foreign_key="personne.identifiant")
+
+
+
+
+
+# class Compte(SQLModel, table=True):
+#     identifiant : int = Field(primary_key=True)
+    
+#     prenom : str
+#     nom : str
+    
+#     email : str
+#     mot_de_passe_crypt : str
+    
+    
+    
+    
+class Personne(SQLModel):
     identifiant : int = Field(primary_key=True)
     
-    nom : str 
     prenom : str
-    telephone : str
-    
-    status : str
-    
-    id_appartement : int | None = Field(default=None, foreign_key="appartement.identifiant")
-    appartement : Optional["Appartement"] = Relationship(back_populates="personnes")
-
-
-class Syndicat(SQLModel, table=True):
-    identifiant : int = Field(primary_key=True)
-    
     nom : str 
-    adresse : str
     telephone : str
+    
+    
+    
+class Proprietaire(Personne, table=True):
     email : str
+    mot_de_passe_hash : str
     
-    referente : int | None = Field(default=None, foreign_key="personne.identifiant")
+    immeubles : list["Immeuble"] = Relationship(back_populates="proprietaire")
+    
+    
+    
+# class Locataire(Personne, table=True):
+#     id_appartement : int | None = Field(default=None, foreign_key="appartement.identifiant")
+#     appartement : Optional["Appartement"] = Relationship(back_populates="locataires")
 
 
 
-
-
-class Compte(SQLModel, table=True):
+class Immeuble(SQLModel, table=True):
     identifiant : int = Field(primary_key=True)
     
-    prenom : str
     nom : str
+    adresse : str
     
-    email : str
-    mot_de_passe_crypt : str
+    id_proprietaire : int = Field(foreign_key="proprietaire.identifiant")
+    proprietaire : Optional["Proprietaire"] = Relationship(back_populates="immeubles")
+    
