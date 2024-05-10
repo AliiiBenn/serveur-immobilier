@@ -4,22 +4,29 @@ from fastapi.responses import HTMLResponse
 
 from core.api.auth import get_current_user_from_cookie
 
-import routers.login as login
-import routers.immeubles as immeubles
+import routers.login.router as router_login
+import routers.immeubles.router as router_immeubles
+import routers.syndicats.router as router_syndicats
+import routers.appartements.router as appartements
 
-from core.api.engine import Engine
 
-Engine().create_all()
 
 app = FastAPI()
 templates = Jinja2Templates(directory="../templates")
 
-app.include_router(login.router)
-app.include_router(immeubles.router)
+app.include_router(router_login.router)
+app.include_router(router_immeubles.router)
+app.include_router(router_syndicats.router)
+app.include_router(appartements.router)
 
 
+    
+from core.api.crud import ImmeubleCRUD
+
+crud = ImmeubleCRUD()
 
 
+    
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -32,8 +39,10 @@ def index(request: Request):
         "user": user,
         "request": request,
     }
+    
+    
+    
     return templates.TemplateResponse("index.html", context)
-
 
 
 

@@ -1,9 +1,11 @@
 from typing import ClassVar, Optional
 
-from sqlmodel import SQLModel, create_engine
 import sqlalchemy
+from sqlmodel import SQLModel, Session, create_engine, select, delete
 
 import warnings
+
+from core.api.models import Appartement, Immeuble, Locataire, Syndicat
 
 
 class Engine:
@@ -34,7 +36,10 @@ class Engine:
     
     def clear(self):
         SQLModel.metadata.drop_all(self.engine)
-    
+        
+        
+                
+        
     
     
     
@@ -43,5 +48,4 @@ if __name__ == "__main__":
     
     engine = Engine()
     
-    print(engine.engine)
     

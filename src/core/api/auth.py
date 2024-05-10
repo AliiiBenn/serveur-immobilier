@@ -97,12 +97,12 @@ def create_access_token(data: dict) -> str:
     return encoded_jwt
 
 
-def authenticate_user(username: str, plain_password: str) -> Proprietaire | bool:
+def authenticate_user(username: str, plain_password: str) -> Proprietaire | None:
     user = get_user(username)
     if not user:
-        return False
+        return None
     if not crypto.verify(plain_password, user.mot_de_passe_hash):
-        return False
+        return None
     return user
 
 

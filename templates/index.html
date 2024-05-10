@@ -12,7 +12,24 @@
 <body>
     {% include '_header.html' %}
 
+    {% if user %}
+    <div class="container mx-auto px-4 py-12">
+        <h1 class="text-4xl font-bold text-center">Que souhaitez-vous faire ?</h1>
+        <div class="divider font-bold my-8">Actions</div>
+        <div class="join-vertical mt-4">
+            <a href="/immeubles" class="btn btn-neutral btn-block my-2">Voir mes immeubles</a>
+            <a href="/syndicats" class="btn btn-accent btn-block my-2">Voir mes syndicats liés</a>
+        </div>
+        <div class="divider font-bold my-8"></div>
+    </div>
+    {% else %}
+    <div class="container mx-auto px-4 py-12">
 
+    </div>
+
+    {% endif %}
+
+    {% include '_footer.html' %}
 
 </body>
 

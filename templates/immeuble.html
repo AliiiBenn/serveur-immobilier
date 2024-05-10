@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.5/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{{ immeuble.nom }}</title>
+</head>
+
+<body>
+    {% include "_header.html" %}
+
+    <div class="container mx-auto px-4 py-8">
+
+        <div class="text-sm breadcrumbs mb-4">
+            <ul>
+                <li><a href="/immeubles">Immeubles</a></li>
+                <li><a href="/immeubles/{{ immeuble.identifiant }}">{{ immeuble.nom }}</a></li>
+            </ul>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-center mb-2">{{ immeuble.nom }}</h1>
+            <p class="text-center text-bold">{{ immeuble.adresse }}</p>
+        </div>
+
+        <div class="carousel w-full rounded-lg overflow-hidden">
+            <div id="item1" class="carousel-item w-full">
+                <img src="https://img.daisyui.com/images/stock/photo-1625726411847-8cbb60cc71e6.jpg" class="w-full" />
+            </div>
+            <div id="item2" class="carousel-item w-full">
+                <img src="https://img.daisyui.com/images/stock/photo-1609621838510-5ad474b7d25d.jpg" class="w-full" />
+            </div>
+            <div id="item3" class="carousel-item w-full">
+                <img src="https://img.daisyui.com/images/stock/photo-1414694762283-acccc27bca85.jpg" class="w-full" />
+            </div>
+            <div id="item4" class="carousel-item w-full">
+                <img src="https://img.daisyui.com/images/stock/photo-1665553365602-b2fb8e5d1707.jpg" class="w-full" />
+            </div>
+        </div>
+        <div class="flex justify-center w-full py-2 gap-2">
+            <a href="#item1" class="btn btn-xs">1</a>
+            <a href="#item2" class="btn btn-xs">2</a>
+            <a href="#item3" class="btn btn-xs">3</a>
+        </div>
+
+        <div class="divider font-bold">Informations</div>
+
+
+        {% if syndicat %}
+        <a href="/syndicats/{{ syndicat.identifiant }}" class="btn btn-neutral btn-block m-2">Accéder au syndicat - {{ syndicat.nom }}</a>
+        
+
+        <button onclick="definir_syndicat.showModal()" class="btn btn-secondary btn-block m-2">Définir le syndicat</button>
+
+        <form action="/immeubles/{{ immeuble.identifiant }}/syndicat/supprimer" method="post">
+            <button class="btn btn-accent btn-block m-2" type="submit">Supprimer le syndicat</button>
+        </form>
+        
+        {% else %}
+
+
+
+
+        <!-- You can open the modal using ID.showModal() method -->
+        <button class="btn btn-neutral btn-block" onclick="definir_syndicat.showModal()">Définir un syndicat</button>
+        
+
+        {% endif %}
+
+        <dialog id="definir_syndicat" class="modal">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg">Définir un syndicat</h3>
+                <form action="/immeubles/{{ immeuble.identifiant }}/syndicat/definir" method="post">
+                    <div class="form-control mt-6">
+                        <select name="syndicat" class="select select-bordered w-full">
+                            <option value="0" disabled selected>Sélectionnez un syndicat</option>
+                            {% for syndicat in ensemble_syndicats %}
+                            <option value="{{ syndicat.identifiant }}">{{ syndicat.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-control mt-6">
+                        <button type="submit" value="Submit" class="btn btn-primary">Définir le syndicat</button>
+                    </div>
+
+                </form>
+            </div>
+        </dialog>
+        
+
+
+        <div class="divider"></div>
+        <h1 class="text-3xl font-bold text-center">Les Appartements</h1>
+
+
+        <div class="overflow-x-auto mt-4">
+            <table class="table">
+                <!-- head -->
+                <thead>
+                    <tr>
+                        <th>Identifiant</th>
+                        <th>Etage</th>
+                        <th>Numero</th>
+                        <th>Surface</th>
+                        <th>Loyer</th>
+                        <th>Est loué</th>
+                        <th>Modifier</th>
+                        <th>Supprimer</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in appartements %}
+                    <tr>
+                        <th>{{ a.appartement.identifiant }}</th>
+                        <td>{{ a.appartement.etage }}</td>
+                        <td>{{ a.appartement.numero }}</td>
+                        <td>{{ a.appartement.surface }}</td>
+                        <td>{{ a.appartement.loyer }}</td>
+                        <td>
+                            {% if a.est_loue %}
+                                {{ a.locataires|length }} personne(s)
+                            {% else %}
+                                Non
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/immeubles/{{ immeuble.identifiant }}/appartements/{{ a.appartement.identifiant }}"
+                                class="btn btn-xs btn-primary">Modifier</a>
+                        </td>
+                        <td>
+                            <form action="/immeubles/{{ immeuble.identifiant }}/appartements/{{ a.appartement.identifiant }}/supprimer" method="post">
+                                <button type="submit" value="Submit" class="btn btn-xs btn-primary">Supprimer</button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+
+        <button class="btn btn-accent btn-block mt-6" onclick="ajouter_appartement.showModal()">Ajouter un
+            appartement</button>
+        <dialog id="ajouter_appartement" class="modal">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg">Ajouter un appartement</h3>
+                <form action="/immeubles/{{ immeuble.identifiant }}/appartement/ajouter" method="post">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Etage</span>
+                        </label>
+                        <input type="text" placeholder="Etage" class="input input-bordered" name="etage" value="{{ etage }}"
+                            required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Numéro</span>
+                        </label>
+                        <input type="text" placeholder="Numero" class="input input-bordered" name="numero" value="{{ numero }}"
+                            required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Surface</span>
+                        </label>
+                        <input type="text" placeholder="Surface" class="input input-bordered" name="surface"
+                            value="{{ surface }}" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Loyer</span>
+                        </label>
+                        <input type="text" placeholder="Loyer" class="input input-bordered" name="loyer" value="{{ loyer }}"
+                            required />
+                    </div>
+                    <div class="form-control mt-6">
+                        <button type="submit" value="Submit" class="btn btn-primary">Ajouter l'appartement</button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
+        <div class="divider"></div>
+
+    </div>
+
+
+</body>
+
+</html>

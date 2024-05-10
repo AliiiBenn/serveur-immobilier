@@ -1,399 +1,271 @@
+from typing import Sequence, overload
+from fastapi import Request
 from sqlmodel import Session, select
-from sqlalchemy.exc import IntegrityError
-
-
-from api.models import Immeuble, Appartement, Personne, Syndicat
-from api.engine import Engine
-
-from typing import Final, Protocol, TypeVar
+from .models import Appartement, Immeuble, Locataire, Proprietaire, Syndicat
+from .engine import Engine
 
 
 
-T = TypeVar("T")
-
-
-class CRUD(Protocol[T]):
-    engine : Engine
-    
-    def create(self, obj : T) -> None:
-        ...
-    
-    def read(self, id : int) -> T:
-        ...
-    
-    def update(self, id : int, obj : T) -> None:
-        ...
-    
-    def delete(self, id : int) -> None:
-        ...
+engine = Engine()
 
 
 
-""" 
-
-What should it do for better interface ?
-
-- Create with a an `Immeuble` object
-- Create only with an immeuble data 
-- Create with immeuble data without id
 
 
-- Custom errors 
-
-"""
-
-class ImmeubleWithIDAlreadyExistsError(ValueError):
-    def __init__(self, message : str, immeuble : Immeuble) -> None:
-        super().__init__(message)
-        self.immeuble = immeuble
-        
-        
-        
-class ImmeubleWithNameAndAdresseAlreadyExistsError(ValueError):
-    def __init__(self, message : str, immeuble : Immeuble) -> None:
-        super().__init__(message)
-        self.immeuble = immeuble
-        
-        
-        
-class ImmeubleNotFoundError(ValueError):
-    def __init__(self, message : str) -> None:
-        super().__init__(message)
-        
-        
-
-
-class ImmeubleCRUD(CRUD[Immeuble]):
-    """Base class used to manipulate `Immeuble` table with a CRUD behavior"""
-    def __init__(self, engine : Engine) -> None:
-        self.__engine = engine
-        
-        
-    @property 
-    def engine(self) -> Engine:
-        return self.__engine.engine
-    
-    
-    def create(self, immeuble : Immeuble) -> None:
-        """Create a new immeuble and append it to the database
-
-        Args:
-            immeuble (`Immeuble`): The immeuble to create
-
-        Raises:
-            `ImmeubleAlreadyExistsError`: In case an immeuble with the ID already exists
-
-        It is pretty simple to use this method. Here's an example:
-        
-        ```python
-        immeuble = Immeuble(identifiant=1, nom="Test", adresse="test", syndicat=1) # Create a new immeuble object
-        crud.create(immeuble)
-        ```
-
-        """
-        def already_exists(nom : str, adresse : str) -> bool:
-            """Local function to check if an immeuble with the same name and adresse already exists"""
-            return self.read_from_name_and_adresse(nom, adresse) is not None
-        
-        
-        try:
-            if already_exists(immeuble.nom, immeuble.adresse):
-                raise ImmeubleWithNameAndAdresseAlreadyExistsError(
-                    "An immeuble with the same name and adresse already exists",
-                    immeuble
-                )
-            
-            with Session(self.engine) as session:
-                session.add(immeuble)
-                session.commit()
-        except IntegrityError as e:
-            e.add_note(f"The id of the immeuble that already exists is {immeuble.identifiant}")
-            
-            raise ImmeubleWithIDAlreadyExistsError(
-                f"An immeuble with the same id already exists",
-                immeuble
-            ) from e
-            
-            
-    def create_from_data(self, identifiant : int, nom : str, adresse : str, syndicat : int) -> None:
-        immeuble = Immeuble(identifiant=identifiant, nom=nom, adresse=adresse, syndicat=syndicat)
-        self.create(immeuble)
-        
-        
-    def create_from_data_without_id(self, nom : str, adresse : str, syndicat : int) -> None:
-        immeuble = Immeuble(nom=nom, adresse=adresse, syndicat=syndicat)
-        self.create(immeuble)
-            
-            
-    def read(self, id : int) -> Immeuble | None:
-        with Session(self.engine) as session:
-            # return session.get(Immeuble, id)
+class ImmeubleCRUD:
+    def get_immeuble_from_id(self, id : int) -> Immeuble | None:
+        """Retourne l'immeuble avec l'identifiant id"""
+        with Session(engine.engine) as session:
             immeuble = session.exec(select(Immeuble).where(Immeuble.identifiant == id))
             
             return immeuble.first()
         
         
-    def read_from_name_and_adresse(self, nom : str, adresse : str) -> Immeuble | None:
-        with Session(self.engine) as session:
+    def get_immeuble_from_name_and_adresse(self, nom : str, adresse : str) -> Immeuble | None:
+        """Retourne l'immeuble avec le nom et l'adresse donnés"""
+        with Session(engine.engine) as session:
             immeuble = session.exec(
                 select(Immeuble).where(Immeuble.nom == nom).where(Immeuble.adresse == adresse)
             )
+        
             
             return immeuble.first()
         
+        
+    def get_immeuble_from_request(self, request: Request) -> Immeuble:
+        """Retourne l'immeuble avec l'identifiant donné dans le path"""
+        return self.get_immeuble_from_id(request.path_params["id"])
     
-            
-    # TODO: Add a new method to update the immeuble with an immeuble as parameter
-    def update(self, id : int, new_immeuble : Immeuble) -> None:
-        with Session(self.engine) as session:
-            current_immeuble = self.read(id)
-            
-            if current_immeuble is None:
-                raise ImmeubleNotFoundError(f"An immeuble with the id {id} does not exist")
-            
-            current_immeuble.nom = new_immeuble.nom
-            current_immeuble.adresse = new_immeuble.adresse
-            current_immeuble.syndicat = new_immeuble.syndicat
-            
-            session.add(current_immeuble)
-            session.commit()
-            session.refresh(current_immeuble)
-            
-            
-    def delete(self, id : int) -> None:
-        with Session(self.engine) as session:
-            immeuble = self.read(id)
+    
+    def get_immeubles_from_proprietaire(self, idenfifiant_proprietaire: int) -> Sequence[Immeuble]:
+        """Retourne la liste des immeubles du propriétaire donné"""
+        with Session(engine.engine) as session:
+            immeubles = session.exec(select(Immeuble).where(Immeuble.id_proprietaire == idenfifiant_proprietaire)).all()
+            return immeubles
+        
+        
+    def ajouter_syndicat_immeuble(self, id_immeuble : int, id_syndicat : int) -> None:
+        """Définit le syndicat d'un immeuble"""
+        with Session(engine.engine) as session:
+            immeuble = self.get_immeuble_from_id(id_immeuble)
             
             if immeuble is None:
-                raise ImmeubleNotFoundError(f"An immeuble with the id {id} does not exist")
+                raise ValueError(f"Un immeuble avec l'identifiant {id_immeuble} n'existe pas")
             
-            session.delete(immeuble)
+            immeuble.id_syndicat = id_syndicat
+            session.add(immeuble)
             session.commit()
+            session.refresh(immeuble)
             
             
-class AppartementNotFoundError(ValueError):
-    def __init__(self, message : str) -> None:
-        super().__init__(message)
-            
-            
-class AppartementCRUD(CRUD[Appartement]):
-    def __init__(self, engine : Engine) -> None:
-        self.__engine = engine
+    def add_immeuble(self, immeuble : Immeuble) -> None:
+        """Ajoute une immeuble à la base de données"""
+        with Session(engine.engine) as session:
+            session.add(immeuble)
+            session.commit()
         
-
-    @property
-    def engine(self) -> Engine:
-        return self.__engine.engine
+        
+    def reset_syndicat_immeuble(self, id_immeuble) -> None:
+        """Réinitialise le syndicat d'une immeuble"""
+        with Session(engine.engine) as session:
+            immeuble = self.get_immeuble_from_id(id_immeuble)
+            
+            if immeuble is None:
+                raise ValueError(f"Un immeuble avec l'identifiant {id_immeuble} n'existe pas")
+            
+            immeuble.id_syndicat = None
+            session.add(immeuble)
+            session.commit()
+            session.refresh(immeuble)
+        
+        
+    def immeuble_exists(self, immeuble : Immeuble, identifiant_proprietaire : str) -> bool:
+        """Vérifie si une immeuble existe dans la base de données"""
+        with Session(engine.engine) as session:
+            immeuble = session.exec(
+                select(Immeuble).where(Immeuble.nom == immeuble.nom).where(Immeuble.adresse == immeuble.adresse)\
+                                .where(Immeuble.id_proprietaire == identifiant_proprietaire)
+            )
+            
+            return immeuble.first() is not None
     
     
-    def create(self, appartement : Appartement) -> None:
-        with Session(self.engine) as session:
-            session.add(appartement)
-            session.commit()
-            
-            
-    def read(self, id : int) -> Appartement | None:
-        with Session(self.engine) as session:
-            appartement = session.exec(select(Appartement).where(Appartement.identifiant == id))
-            
-            return appartement.first()
-        
-        
-    def update(self, id : int, appartement : Appartement) -> None:
-        with Session(self.engine) as session:
-            current_appartement = self.read(id)
-            
-            if current_appartement is None:
-                raise AppartementNotFoundError(f"An appartement with the id {id} does not exist")
-            
-            current_appartement.etage = appartement.etage
-            current_appartement.numero = appartement.numero
-            current_appartement.superficie = appartement.superficie
-            
-            session.add(current_appartement)
-            session.commit()
-            session.refresh(current_appartement)
-            
-            
-    def delete(self, id : int) -> None:
-        with Session(self.engine) as session:
-            current_appartement = self.read(id)
-            
-            if current_appartement is None:
-                raise AppartementNotFoundError(f"An appartement with the id {id} does not exist")
-            
-            session.delete(current_appartement)
-            session.commit()
-            
-            
-        
-
-class PersonneNotFoundError(ValueError):
-    def __init__(self, message : str) -> None:
-        super().__init__(message)
-            
-            
-class PersonneCRUD(CRUD[Personne]):
-    def __init__(self, engine : Engine) -> None:
-        self.__engine = engine
-        
-        
-    @property
-    def engine(self) -> Engine:
-        return self.__engine.engine
-
     
-    
-    def create(self, personne : Personne) -> None:
-        with Session(self.engine) as session:
-            session.add(personne)
-            session.commit()
-            
-            
-    def read(self, id : int) -> Personne | None:
-        with Session(self.engine) as session:
-            personne = session.exec(Personne).get(id)
-            
-            return personne 
-        
-        
-        
-        
-    def update(self, id : int,personne : Personne) -> None:
-        with Session(self.engine) as session:
-            current_personne = self.read(id)
-            
-            if current_personne is None:
-                raise PersonneNotFoundError(f"A personne with the id {id} does not exist")
-            
-            
-            current_personne.nom = personne.nom
-            current_personne.prenom = personne.prenom
-            current_personne.telephone = personne.telephone
-            
-            session.add(current_personne)
-            session.commit()
-            session.refresh(current_personne)
-            
-            
-    def delete(self, id : int) -> None:
-        with Session(self.engine) as session:
-            personne = self.read(id)
-            
-            if personne is None:
-                raise PersonneNotFoundError(f"A personne with the id {id} does not exist")
-            
-            session.delete(personne)
-            session.commit()
-            
-            
-
-class SyndicatNotFoundError(ValueError):
-    def __init__(self, message : str) -> None:
-        super().__init__(message)
-
-            
-            
-class SyndicatCRUD(CRUD[Syndicat]):
-    def __init__(self, engine : Engine) -> None:
-        self.__engine = engine
-    
-    
-    @property
-    def engine(self) -> Engine:
-        return self.__engine.engine
-    
-    
-    def create(self, syndicat : Syndicat) -> None:
-        with Session(self.engine) as session:
-            session.add(syndicat)
-            session.commit()
-            
-            
-    def read(self, id : int) -> Syndicat | None:
-        with Session(self.engine) as session:
+class SyndicatCRUD:
+    def get_syndicat_from_id(self, id : int | None) -> Syndicat | None:
+        """Retourne le syndicat avec l'identifiant donné"""
+        with Session(engine.engine) as session:
             syndicat = session.exec(select(Syndicat).where(Syndicat.identifiant == id))
             
             return syndicat.first()
         
         
-    def update(self, id : int, syndicat : Syndicat) -> None:
-        with Session(self.engine) as session:
-            current_syndicat = self.read(id)
+    def get_syndicat_from_name_and_adresse(self, nom : str, adresse : str) -> Syndicat | None:
+        """Retourne le syndicat avec le nom et l'adresse donnés"""
+        with Session(engine.engine) as session:
+            syndicat = session.exec(
+                select(Syndicat).where(Syndicat.nom == nom).where(Syndicat.adresse == adresse)
+            )
             
-            if current_syndicat is None:
-                raise SyndicatNotFoundError(f"A syndicat with the id {id} does not exist")
+            return syndicat.first()
+        
+    def get_all_syndicats(self, identifiant_proprietaire : int) -> Sequence[Syndicat]:
+        """Retourne la liste des syndicats du propriétaire donné"""
+        with Session(engine.engine) as session:
+            syndicats = session.exec(select(Syndicat).where(Syndicat.id_referente == identifiant_proprietaire)).all()
+            return syndicats
+        
+        
+    def syndicat_exists(self, syndicat : Syndicat, identifiant_proprietaire : str) -> bool:
+        """Vérifie si un syndicat existe dans la base de données"""
+        with Session(engine.engine) as session:
+            syndicat = session.exec(
+                select(Syndicat).where(Syndicat.nom == syndicat.nom).where(Syndicat.adresse == syndicat.adresse)\
+                                .where(Syndicat.telephone == syndicat.telephone).where(Syndicat.email == syndicat.email)\
+                                .where(Syndicat.id_referente == identifiant_proprietaire)
+            )
             
-            current_syndicat.nom = syndicat.nom
-            current_syndicat.adresse = syndicat.adresse
-            current_syndicat.telephone = syndicat.telephone
-            current_syndicat.email = syndicat.email
-            
-            session.add(current_syndicat)
+            return syndicat.first() is not None
+        
+
+    def get_immeubles_of_syndicat(self, syndicat: Syndicat) -> Sequence[Immeuble]:
+        """Retourne la liste des immeubles du syndicat donné"""
+        with Session(engine.engine) as session:
+            return session.exec(select(Immeuble).where(Immeuble.id_syndicat == syndicat.identifiant)).all()
+        
+    
+    def add_syndicat(self, syndicat : Syndicat) -> None:
+        """Ajoute un syndicat à la base de données"""
+        with Session(engine.engine) as session:
+            session.add(syndicat)
             session.commit()
-            session.refresh(current_syndicat)
-            
-            
-    def delete(self, id : int) -> None: 
-        with Session(self.engine) as session:
-            current_syndicat = self.read(id)
-            
-            if current_syndicat is None:
-                raise SyndicatNotFoundError(f"A syndicat with the id {id} does not exist")
-            
-            session.delete(current_syndicat)
-            
-            
-            
-            
-class CompteNotFoundError(ValueError):
-    def __init__(self, message : str) -> None:
-        super().__init__(message)
+        
+      
+        
+class LocataireCRUD:
+    def get_locataires_from_appartement(self, id_appartement: int) -> Sequence[Locataire]:
+        """Retourne la liste des locataires d'un appartement donné"""
+        with Session(engine.engine) as session:
+            locataires = session.exec(select(Locataire).where(Locataire.id_appartement == id_appartement)).all()
+            return locataires
         
         
-# class CompteCRUD(CRUD[Compte]):
-    # def __init__(self, engine : Engine) -> None:
-    #     self.__engine = engine
+    def get_locataire_from_id(self, id : int) -> Locataire | None:
+        """Retourne l'appartement avec l'identifiant donné"""
+        with Session(engine.engine) as session:
+            locataire = session.exec(select(Locataire).where(Locataire.identifiant == id))
+            
+            return locataire.first()
         
         
-    # @property
-    # def engine(self) -> Engine:
-    #     return self.__engine.engine
+    def locataire_exists(self, locataire : Locataire, id_appartement : int) -> bool:
+        """Vérifie si un locataire existe dans la base de données"""
+        with Session(engine.engine) as session:
+            locataire = session.exec(
+                select(Locataire).where(Locataire.prenom == locataire.prenom)\
+                                 .where(Locataire.nom == locataire.nom)\
+                                 .where(Locataire.telephone == locataire.telephone)\
+                                 .where(Locataire.id_appartement == id_appartement)
+            )
+            
+            return locataire.first() is not None
+        
+        
+        
+    def add_locataire(self, locataire : Locataire) -> None:
+        """Ajoute un locataire à la base de données"""
+        with Session(engine.engine) as session:
+            session.add(locataire)
+            session.commit()
+            session.refresh(locataire)
+            
+            
+    def delete_locataire_from_id(self, id : int) -> None:
+        """Supprime l'appartement avec l'identifiant donné"""
+        with Session(engine.engine) as session:
+            locataire = self.get_locataire_from_id(id)
+            
+            if locataire is None:
+                raise ValueError(f"Un locataire avec l'identifiant {id} n'existe pas")
+            
+            session.delete(locataire)
+            session.commit()
+            
+            
+            
+  
+class AppartementCRUD:
+    def get_appartements_from_immeuble(self, id_immeuble: int) -> Sequence[Appartement]:
+        """Retourne la liste des appartements d'un immeuble donné"""
+        with Session(engine.engine) as session:
+            appartements = session.exec(select(Appartement).where(Appartement.id_immeuble == id_immeuble)).all()
+            return appartements
+        
+        
+    def get_appartement_from_id(self, id : int) -> Appartement | None:
+        """Retourne l'appartement avec l'identifiant donné"""
+        with Session(engine.engine) as session:
+            appartement = session.exec(select(Appartement).where(Appartement.identifiant == id))
+            
+            return appartement.first()
+        
+            
+    def get_appartement_from_request_path(self, request : Request) -> Appartement:
+        """Retourne l'appartement avec l'identifiant donné dans le path"""
+        return self.get_appartement_from_id(request.path_params["id_appartement"])
+        
+        
+    def get_locataire_from_id(self, id : int) -> Locataire | None:
+        """Retourne l'appartement avec l'identifiant donné"""
+        with Session(engine.engine) as session:
+            locataire = session.exec(select(Locataire).where(Locataire.identifiant == id))
+            
+            return locataire.first()
+            
+            
+    def delete_appartement_from_id(self, id : int) -> None:
+        """Supprime l'appartement avec l'identifiant donné"""
+        with Session(engine.engine) as session:
+            appartement = self.get_appartement_from_id(id)
+            
+            if appartement is None:
+                raise ValueError(f"Un appartement avec l'identifiant {id} n'existe pas")
+            
+            locataires = LocataireCRUD().get_locataires_from_appartement(id)
+            
+            for locataire in locataires:
+                session.delete(locataire)
+            
+            session.delete(appartement)
+            session.commit()
+            
+            
+    def add_appartement(self, appartement : Appartement) -> None:
+        """Ajoute un appartement à la base de données"""
+        with Session(engine.engine) as session:
+            session.add(appartement)
+            session.commit()
+            
+            
+    def appartement_exists(self, appartement : Appartement) -> bool:
+        """Vérifie si un appartement existe dans la base de données"""
+        with Session(engine.engine) as session:
+            appartement = session.exec(select(Appartement)\
+                        .where(Appartement.etage == appartement.etage)\
+                        .where(Appartement.numero == appartement.numero)\
+                        .where(Appartement.id_immeuble == appartement.id_immeuble)
+            )
+        
+            
+            return appartement.first() is not None
+        
+        
+    def get_all_appartements(self, id_immeuble : int) -> Sequence[Appartement]:
+        """Retourne la liste des appartements d'un immeuble donné"""
+        with Session(engine.engine) as session:
+            appartements = session.exec(select(Appartement).where(Appartement.id_immeuble == id_immeuble)).all()
+            return appartements
+        
+        
+        
     
-    
-    # def create(self, compte : Compte) -> None:
-    #     with Session(self.engine) as session:
-    #         session.add(compte)
-    #         session.commit()
-            
-            
-    # def read(self, id : int) -> Compte | None:
-    #     with Session(self.engine) as session:
-    #         compte = session.exec(select(Compte).where(Compte.identifiant == id))
-            
-    #         return compte.first()
-        
-        
-    # def update(self, id : int, compte : Compte) -> None:
-    #     with Session(self.engine) as session:
-    #         current_compte = self.read(id)
-            
-    #         if current_compte is None:
-    #             raise CompteNotFoundError(f"A compte with the id {id} does not exist")
-            
-    #         current_compte.email = compte.email
-    #         current_compte.mot_de_passe = compte.mot_de_passe
-            
-    #         session.add(current_compte)
-    #         session.commit()
-    #         session.refresh(current_compte)
-            
-            
-    # def delete(self, id : int) -> None: 
-    #     with Session(self.engine) as session:
-    #         current_compte = self.read(id)
-            
-    #         if current_compte is None:
-    #             raise CompteNotFoundError(f"A compte with the id {id} does not exist")
-            
-    #         session.delete(current_compte)
