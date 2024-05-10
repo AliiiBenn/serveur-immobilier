@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.5/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Ajouter un syndicat</title>
+</head>
+
+<body>
+    {% include "_header.html" %}
+
+    <div class="hero min-h-screen bg-base-200">
+        <div class="hero-content flex-col lg:flex-row-reverse">
+            <div class="text-center lg:text-left">
+                <h1 class="text-5xl font-bold">Ajouter un syndicat</h1>
+                <p class="py-6">Provident cupiditate voluptatem et in. Quaerat fugiat ut assumenda excepturi
+                    exercitationem
+                    quasi. In deleniti eaque aut repudiandae et a id nisi.</p>
+            </div>
+            <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+                <form class="card-body" action="/syndicats/nouveau" method="post">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Nom du syndicat</span>
+                        </label>
+                        <input type="text" placeholder="Nom du syndicat" class="input input-bordered" name="name"
+                            value="{{ name }}" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Adresse du syndicat</span>
+                        </label>
+                        <input type="text" placeholder="Adresse" class="input input-bordered" name="address"
+                            value="{{ address }}" required />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Telephone du syndicat</span>
+                        </label>
+                        <input type="text" placeholder="Telephone" class="input input-bordered" name="telephone"
+                            value="{{ telephone }}" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Email du syndicat</span>
+                        </label>
+                        <input type="text" placeholder="Email" class="input input-bordered" name="email"
+                            value="{{ email }}" required />
+                    </div>
+                    <div class="form-control mt-6">
+                        <button type="submit" value="Submit" class="btn btn-primary">Ajouter le syndicat</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

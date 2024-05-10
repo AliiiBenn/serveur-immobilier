@@ -1,0 +1,89 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.5/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>S'inscrire</title>
+</head>
+
+<body>
+    {% include '_header.html' %}
+
+    {% if errors %}
+
+    <div role="alert" class="alert alert-error">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        {% for error in errors %}
+        <span>{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    {% endif %}
+
+
+    <div class="hero min-h-screen bg-base-200">
+        <div class="hero-content flex-col lg:flex-row-reverse">
+            <div class="text-center lg:text-left">
+                <h1 class="text-5xl font-bold">S'inscrire</h1>
+                <p class="py-6">Provident cupiditate voluptatem et in. Quaerat fugiat ut assumenda excepturi
+                    exercitationem
+                    quasi. In deleniti eaque aut repudiandae et a id nisi.</p>
+            </div>
+            <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+                <form class="card-body" action="/auth/signup" method="post">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Prenom</span>
+                        </label>
+                        <input type="text" placeholder="prenom" class="input input-bordered" name="prenom" value="{{ prenom }}" required />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Nom</span>
+                        </label>
+                        <input type="text" placeholder="nom" class="input input-bordered" name="nom" value="{{ nom }}" required />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Telephone</span>
+                        </label>
+                        <input type="text" placeholder="telephone" class="input input-bordered" name="telephone" value="{{ telephone }}"
+                            required />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Email</span>
+                        </label>
+                        <input type="email" placeholder="email" class="input input-bordered" name="username" value="{{ username }}"
+                            required />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Mot de passe</span>
+                        </label>
+                        <input type="password" placeholder="Mot de passe" class="input input-bordered" name="password"
+                            value="{{ password }}" required />
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" value="Submit" class="btn btn-primary">Créer mon compte</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

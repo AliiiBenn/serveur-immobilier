@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="retro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.5/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{{ appartement.etage }} {{ appartement.numero }}</title>
+</head>
+
+<body>
+    {% include "_header.html" %}
+
+    <div class="container mx-auto px-4 py-8">
+
+        <div class="text-sm breadcrumbs mb-4">
+            <ul>
+                <li><a href="/immeubles">Immeubles</a></li>
+                <li><a href="/immeubles/{{ immeuble.identifiant }}">{{ immeuble.nom }}</a></li>
+                <li><a href="/immeubles/{{ immeuble.identifiant }}/appartements/{{ appartement.identifiant }}">Appartement étage {{ appartement.etage }} - Numéro {{ appartement.numero }}</a></li>
+            </ul>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-center mb-2">{{ immeuble.nom }}</h1>
+            <p class="text-center text-bold font-bold">Appartement</p>
+            <p class="text-center text-bold font-bold">Étage : {{appartement.etage}} - Numéro : {{appartement.numero}}
+            <p class="text-center text-bold font-bold">Loyer : {{ appartement.loyer }}€/mois - Surface : {{ appartement.surface }}m²
+            </p>
+        </div>
+
+        <div class="carousel w-full rounded-lg overflow-hidden">
+            <div id="item1" class="carousel-item w-full">
+                <img src="https://img.daisyui.com/images/stock/photo-1625726411847-8cbb60cc71e6.jpg" class="w-full" />
+            </div>
+            <div id="item2" class="carousel-item w-full">
+                <img src="https://img.daisyui.com/images/stock/photo-1609621838510-5ad474b7d25d.jpg" class="w-full" />
+            </div>
+            <div id="item3" class="carousel-item w-full">
+                <img src="https://img.daisyui.com/images/stock/photo-1414694762283-acccc27bca85.jpg" class="w-full" />
+            </div>
+            <div id="item4" class="carousel-item w-full">
+                <img src="https://img.daisyui.com/images/stock/photo-1665553365602-b2fb8e5d1707.jpg" class="w-full" />
+            </div>
+        </div>
+        <div class="flex justify-center w-full py-2 gap-2">
+            <a href="#item1" class="btn btn-xs">1</a>
+            <a href="#item2" class="btn btn-xs">2</a>
+            <a href="#item3" class="btn btn-xs">3</a>
+        </div>
+
+        <div class="divider font-bold">Informations</div>
+
+        <a href="/immeubles/{{ immeuble.identifiant }}" class="btn btn-neutral btn-block">Immeuble : {{ immeuble.nom
+            }}</a>
+
+
+        <button class="btn btn-primary btn-block mt-2" onclick="modifier_appartement.showModal()">Modifier l'appartement</button>
+
+
+        <dialog id="modifier_appartement" class="modal">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg">Modifier un appartement</h3>
+                <p>Si une donnée n'est pas renseignée, la donnée actuelle sera conservée.</p>
+                <form
+                    action="/immeubles/{{ immeuble.identifiant }}/appartements/{{ appartement.identifiant }}/modifier"
+                    method="post">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Etage</span>
+                        </label>
+                        <input type="text" placeholder="Etage" class="input input-bordered" name="etage"
+                            value="{{ etage }}" />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Numéro</span>
+                        </label>
+                        <input type="text" placeholder="Numéro" class="input input-bordered" name="numero"
+                            value="{{ numero }}" />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Surface</span>
+                        </label>
+                        <input type="text" placeholder="Surface" class="input input-bordered" name="surface"
+                            value="{{ surface }}" />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Loyer</span>
+                        </label>
+                        <input type="text" placeholder="Loyer" class="input input-bordered" name="loyer"
+                            value="{{ loyer }}" />
+                    </div>
+                    <div class="form-control mt-6">
+                        <button type="submit" value="Submit" class="btn btn-primary">Modifier l'appartement</button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
+
+        <div class="divider"></div>
+        <h1 class="text-3xl font-bold text-center">Les locataires</h1>
+
+        <div class="overflow-x-auto mt-4">
+            <table class="table">
+                <!-- head -->
+                <thead>
+                    <tr>
+                        <th>Prénom</th>
+                        <th>Nom</th>
+                        <th>Téléphone</th>
+                        <th>Email</th>
+                        <th>Supprimer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for locataire in locataires %}
+                    <tr>
+                        <td>{{ locataire.prenom }}</td>
+                        <td>{{ locataire.nom }}</td>
+                        <td>{{ locataire.telephone }}</td>
+                        {% if locataire.email|length > 0 %}
+                        <td>{{ locataire.email }}</td>
+                        {% else %}
+                        <td>Non renseigné</td>
+                        {% endif %}
+                        <td>
+                            <form
+                                action="/immeubles/{{ immeuble.identifiant }}/appartements/{{ appartement.identifiant }}/resident/{{ locataire.identifiant }}/supprimer"
+                                method="post">
+                                <button type="submit" value="Submit" class="btn btn-xs btn-primary">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+
+        <button class="btn btn-accent btn-block mt-6" onclick="ajouter_resident.showModal()">Ajouter un
+            locataire</button>
+        <dialog id="ajouter_resident" class="modal">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg">Ajouter un locataire</h3>
+                <form
+                    action="/immeubles/{{ immeuble.identifiant }}/appartements/{{ appartement.identifiant }}/resident/ajouter"
+                    method="post">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Prénom*</span>
+                        </label>
+                        <input type="text" placeholder="Prénom" class="input input-bordered" name="prenom"
+                            value="{{ prenom }}" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Nom*</span>
+                        </label>
+                        <input type="text" placeholder="Nom" class="input input-bordered" name="nom" value="{{ nom }}"
+                            required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Téléphone*</span>
+                        </label>
+                        <input type="text" placeholder="Téléphone" class="input input-bordered" name="telephone"
+                            value="{{ telephone }}" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Email (optionnel - utile pour prévenir les locataires)</span>
+                        </label>
+                        <input type="text" placeholder="Email" class="input input-bordered" name="email"
+                            value="{{ email }}" />
+                    </div>
+                    <div class="form-control mt-6">
+                        <button type="submit" value="Submit" class="btn btn-primary">Ajouter le locataire</button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
+
+
+        <div class="divider"></div>
+
+</body>
+
+</html>
