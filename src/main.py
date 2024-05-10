@@ -20,11 +20,6 @@ app.include_router(router_syndicats.router)
 app.include_router(appartements.router)
 
 
-    
-from core.api.crud import ImmeubleCRUD
-
-crud = ImmeubleCRUD()
-
 
     
 
